@@ -1,0 +1,16 @@
+### searchAll
+GET http://localhost:8080/v1/members
+Accept: application/json
+
+### search username = member3
+GET http://localhost:8080/v1/members?username=member3
+Accept: application/json
+
+### search  8 <= age <= 10
+GET http://localhost:8080/v1/members?ageGoe=8&ageLoe=10
+Accept: application/json
+
+### search teamName = teamB
+GET http://localhost:8080/v1/members?teamName=teamB
+Accept: application/json
+

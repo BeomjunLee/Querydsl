@@ -25,20 +25,20 @@ class MemberJpaRepositoryTest {
     EntityManager em;
 
     @Autowired
-    MemberJpaRepository memberJpaRepository;
+    MemberRepository memberRepository;
 
     @Test
     public void basicTest() {
         Member member = new Member("member1", 10);
-        memberJpaRepository.save(member);
+        memberRepository.save(member);
 
-        Member findMember = memberJpaRepository.findById(member.getId()).get();
+        Member findMember = memberRepository.findById(member.getId()).get();
         assertThat(findMember).isEqualTo(member);
 
-        List<Member> result1 = memberJpaRepository.findAll_Querydsl();
+        List<Member> result1 = memberRepository.findAll();
         assertThat(result1).containsExactly(member);
 
-        List<Member> result2 = memberJpaRepository.findByUsername_Querydsl("member1");
+        List<Member> result2 = memberRepository.findByUsername("member1");
         assertThat(result2).containsExactly(member);
     }
 
@@ -69,7 +69,7 @@ class MemberJpaRepositoryTest {
                 .teamName("teamB")
                 .build();
 
-        List<MemberTeamDto> result = memberJpaRepository.search(condition);
+        List<MemberTeamDto> result = memberRepository.search(condition);
 
         assertThat(result).extracting("username")
                 .containsExactly("member4");
