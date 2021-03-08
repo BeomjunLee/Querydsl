@@ -1,8 +1,11 @@
 package study.querydsl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -636,7 +639,10 @@ public class QuerydslBasicTest {
             System.out.println("MemberDto = " + dto);
         }
     }
-    
+
+    /**
+     * @QueryProjection 사용
+     */
     @Test
     public void findDtoByQueryProjection() {
         List<MemberDto> result = queryFactory
@@ -646,6 +652,149 @@ public class QuerydslBasicTest {
 
         for (MemberDto dto : result) {
             System.out.println("MemberDto = " + dto);
+        }
+    }
+
+    /**
+     * [동적 쿼리 BooleanBuilder]
+     * username : member1
+     * age : 10 인 사람 찾기
+     */
+    @Test
+    public void dynamicQuery_BooleanBuilder() {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember1(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    /**
+     * 파리미터의 값이 null 이냐에 따라서 동적으로 쿼리가 바뀌어야됨
+     */
+    private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+
+        BooleanBuilder builder = new BooleanBuilder();
+        if (usernameCond != null) {
+            builder.and(member.username.eq(usernameCond)); //BooleanBuilder 안에 and 조건을 추가
+        }
+
+        if (ageCond != null) {
+            builder.and(member.age.eq(ageCond)); //BooleanBuilder 안에 and 조건을 추가
+        }
+
+        return queryFactory
+                .selectFrom(member)
+                .where(builder) //builder 의 결과를 where 에 넣기
+                .fetch();
+    }
+
+    /**
+     * where 다중 파라미터 사용
+     */
+    @Test
+    public void dynamicQuery_whereParam() {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember2(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+        return queryFactory
+                .selectFrom(member)
+                .where(usernameEq(usernameCond), ageEq(ageCond))
+                .where(allEq(usernameCond, ageCond))
+                .fetch();
+    }
+
+    private BooleanExpression usernameEq(String usernameCond) {
+        if(usernameCond == null) return null;   //where() 안에 값이 null 이 오면 무시됨
+        return member.username.eq(usernameCond);
+    }
+
+    private BooleanExpression ageEq(Integer ageCond) {
+        if(ageCond == null) return null; //where() 안에 값이 null 이 오면 무시됨
+        return member.age.eq(ageCond);
+    }
+
+    /**
+     * 메서드를 조합해서 사용도 가능
+     */
+    private Predicate allEq(String usernameCond, Integer ageCond) {
+        return usernameEq(usernameCond).and(ageEq(ageCond));
+    }
+
+    /**
+     * [벌크연산]
+     * 회원의 나이가 25살 미만이면 회원의 이름을 비회원으로 모두 변경
+     */
+    @Test
+    public void bulkUpdate() {
+
+        //영향을 받은 row 수
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(25))
+                .execute();
+
+        assertThat(count).isEqualTo(2);
+    }
+
+    /**
+     * 모든 회원의 나이에 +1 하기
+     */
+    @Test
+    public void bulkAdd() {
+        queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+    }
+
+    /**
+     * 15살 초과한 모든 회원 삭제
+     */
+    @Test
+    public void bulkDelete() {
+        queryFactory
+                .delete(member)
+                .where(member.age.gt(15))
+                .execute();
+    }
+
+    /**
+     * 회원 이름에서 member 라는 단어를 M으로 바꿔서 조회
+     */
+    @Test
+    public void sqlFunction() {
+        List<String> result = queryFactory
+                .select(Expressions.stringTemplate("function('replace', {0}, {1}, {2})", member.username, "member", "M"))
+                .from(member)
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    /**
+     * 회원 이름을 소문자로 변경해서 비교
+     */
+    @Test
+    public void sqlFunction2() {
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+//                .where(member.username.eq(
+//                        Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
         }
     }
 }
