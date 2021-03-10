@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import study.querydsl.dto.MemberSearchCondition;
 import study.querydsl.dto.MemberTeamDto;
 import study.querydsl.entity.Member;
@@ -73,6 +75,20 @@ class MemberJpaRepositoryTest {
 
         assertThat(result).extracting("username")
                 .containsExactly("member4");
+    }
+
+    @Test
+    public void searchPageSimple() {
+        createTestcase();
+
+        MemberSearchCondition condition = MemberSearchCondition.builder().build();
+        PageRequest pageRequest = PageRequest.of(0, 3); //0페이지부터 시작, 사이즈를 3개
+
+        Page<MemberTeamDto> result = memberRepository.searchPageSimple(condition, pageRequest);
+
+        assertThat(result.getSize()).isEqualTo(3);
+        assertThat(result.getContent()).extracting("username")
+                .containsExactly("member1", "member2", "member3");
     }
 
 }
