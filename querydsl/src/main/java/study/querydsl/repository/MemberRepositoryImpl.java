@@ -122,13 +122,13 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
                         ageGoe(condition.getAgeGoe()),
                         ageLoe(condition.getAgeLoe())
                 );
-
-
 //        return new PageImpl<>(content, pageable, total);    //Page 의 구현체에 (content, pageable, total) 순
 
         //첫 페이지나 마지막 일 때는 자동으로 count 쿼리가 안나간다 -> pageableExecutionUtils
         return PageableExecutionUtils.getPage(content, pageable, () -> countQuery.fetchCount());
     }
+
+
 
     private BooleanExpression usernameEq(String username) {
         if(hasText(username)) return member.username.eq(username);

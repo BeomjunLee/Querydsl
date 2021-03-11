@@ -14,3 +14,8 @@ Accept: application/json
 GET http://localhost:8080/v1/members?teamName=teamB
 Accept: application/json
 
+### search with paging
+GET http://localhost:8080/v2/members?page=0&size=5
+Accept: application/json
+
+
