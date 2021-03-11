@@ -3,15 +3,18 @@ package study.querydsl.repository;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.util.StringUtils;
 import study.querydsl.dto.MemberSearchCondition;
 import study.querydsl.dto.MemberTeamDto;
 import study.querydsl.dto.QMemberTeamDto;
+import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
 import study.querydsl.entity.QTeam;
 
@@ -79,7 +82,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
 
         List<MemberTeamDto> content = results.getResults();
         long total = results.getTotal();    //total count
-        
+
         return new PageImpl<>(content, pageable, total);    //Page 의 구현체에 (content, pageable, total) 순
     }
 
@@ -109,7 +112,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
                 .limit(pageable.getPageSize())  //한번에 몇개 까지 조회할지
                 .fetch();//querydsl 이 content 쿼리, count 쿼리 두번 날림  (fetch 는 content 만)
 
-        long total = queryFactory
+        JPAQuery<Member> countQuery = queryFactory
                 .select(member)
                 .from(member)
                 .leftJoin(member.team, team)
@@ -118,10 +121,13 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom{
                         teamNameEq(condition.getTeamName()),
                         ageGoe(condition.getAgeGoe()),
                         ageLoe(condition.getAgeLoe())
-                )
-                .fetchCount();
+                );
 
-        return new PageImpl<>(content, pageable, total);    //Page 의 구현체에 (content, pageable, total) 순
+
+//        return new PageImpl<>(content, pageable, total);    //Page 의 구현체에 (content, pageable, total) 순
+
+        //첫 페이지나 마지막 일 때는 자동으로 count 쿼리가 안나간다 -> pageableExecutionUtils
+        return PageableExecutionUtils.getPage(content, pageable, () -> countQuery.fetchCount());
     }
 
     private BooleanExpression usernameEq(String username) {

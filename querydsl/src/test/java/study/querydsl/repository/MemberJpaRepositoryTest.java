@@ -90,5 +90,5 @@ class MemberJpaRepositoryTest {
         assertThat(result.getContent()).extracting("username")
                 .containsExactly("member1", "member2", "member3");
     }
-
 }
+
