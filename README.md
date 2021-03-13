@@ -1,5 +1,5 @@
 ## Querydsl
-<img src="https://user-images.githubusercontent.com/69130921/111043273-f66fbe80-8484-11eb-96d6-a8378694504c.png"><br><br>
+<img src="https://user-images.githubusercontent.com/69130921/111043298-25863000-8485-11eb-9fb7-1896d07fb9db.png"><br><br>
 
 ### Querydsl 세팅(Gradle)
 https://blog.naver.com/qjawnswkd/222266915982<br>
